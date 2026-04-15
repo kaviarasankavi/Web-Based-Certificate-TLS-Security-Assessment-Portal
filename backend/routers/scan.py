@@ -330,3 +330,100 @@ async def list_scans(
         limit=limit,
         scans=[ScanResponse.model_validate(s) for s in scans],
     )
+
+
+@router.delete("/scan/{scan_id}", status_code=204)
+async def delete_scan(
+    scan_id: str,
+    db: AsyncSession = Depends(get_pg_db),
+    user_id: int = Depends(_get_user_id_from_token),
+):
+    """Delete a scan and all its associated data (user-scoped)."""
+    scan = await db.get(Scan, scan_id)
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    if scan.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    await db.delete(scan)
+    await db.commit()
+
+
+@router.get("/scan/{scan_id}/headers")
+async def get_security_headers(
+    scan_id: str,
+    db: AsyncSession = Depends(get_pg_db),
+    user_id: int = Depends(_get_user_id_from_token),
+):
+    """Run a live HTTP security headers analysis for this scan's domain."""
+    from scanner.security_headers import SecurityHeadersAnalyzer
+
+    scan = await db.get(Scan, scan_id)
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    if scan.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    if scan.status != "completed":
+        raise HTTPException(status_code=400, detail="Scan not yet completed")
+
+    import asyncio
+    loop = asyncio.get_event_loop()
+    analyzer = SecurityHeadersAnalyzer(timeout=10)
+    result = await loop.run_in_executor(
+        None, analyzer.analyze, scan.target_url, scan.port
+    )
+    return result.to_dict()
+
+
+@router.get("/scan/{scan_id}/vulnerabilities")
+async def get_vulnerabilities(
+    scan_id: str,
+    db: AsyncSession = Depends(get_pg_db),
+    user_id: int = Depends(_get_user_id_from_token),
+):
+    """Run a live vulnerability scan (Heartbleed, POODLE, BEAST etc.) for this scan's domain."""
+    from scanner.vulnerabilities.orchestrator import VulnerabilityOrchestrator
+
+    scan = await db.get(Scan, scan_id)
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    if scan.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    if scan.status != "completed":
+        raise HTTPException(status_code=400, detail="Scan not yet completed")
+
+    import asyncio
+    loop = asyncio.get_event_loop()
+    orchestrator = VulnerabilityOrchestrator(timeout=8, parallel=True)
+    result = await loop.run_in_executor(
+        None, orchestrator.scan, scan.target_url, scan.port
+    )
+    return result.to_dict()
+
+
+@router.get("/scan/{scan_id}/dns")
+async def get_dns_security(
+    scan_id: str,
+    db: AsyncSession = Depends(get_pg_db),
+    user_id: int = Depends(_get_user_id_from_token),
+):
+    """
+    Run a full DNS security audit for this scan's domain.
+    Checks: DNSSEC, CAA records, SPF, and DMARC policy.
+    """
+    from scanner.dns_security import DNSSecurityAuditor
+
+    scan = await db.get(Scan, scan_id)
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    if scan.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    if scan.status != "completed":
+        raise HTTPException(status_code=400, detail="Scan not yet completed")
+
+    import asyncio
+    loop = asyncio.get_event_loop()
+    auditor = DNSSecurityAuditor(timeout=8)
+    result = await loop.run_in_executor(
+        None, auditor.audit, scan.target_url
+    )
+    return result.to_dict()

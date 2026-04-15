@@ -1,0 +1,50 @@
+/* ======== Score Gauge Component ======== */
+
+.score-gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.gauge-svg {
+  width: 200px;
+  height: 200px;
+  overflow: visible; /* allow glow to extend outside viewbox */
+}
+
+/* Large animated number */
+.gauge-score-num {
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: -2px;
+}
+
+/* "out of 100" */
+.gauge-divider-text {
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+/* Grade letter */
+.gauge-grade-text {
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Bottom label */
+.gauge-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-top: 0;
+}

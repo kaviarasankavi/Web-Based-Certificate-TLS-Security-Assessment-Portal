@@ -79,6 +79,26 @@ export async function listScans(params?: {
   return request<ScanListResponse>(`/scans${qs ? `?${qs}` : ''}`);
 }
 
+/** Delete a scan by ID */
+export async function deleteScan(scanId: string): Promise<void> {
+  await request<void>(`/scan/${scanId}`, { method: 'DELETE' });
+}
+
+/** Get live HTTP security headers analysis */
+export async function getSecurityHeaders(scanId: string): Promise<Record<string, unknown>> {
+  return request<Record<string, unknown>>(`/scan/${scanId}/headers`);
+}
+
+/** Get live vulnerability scan results (Heartbleed, POODLE, BEAST, etc.) */
+export async function getVulnerabilities(scanId: string): Promise<Record<string, unknown>> {
+  return request<Record<string, unknown>>(`/scan/${scanId}/vulnerabilities`);
+}
+
+/** Get full DNS security audit (DNSSEC + CAA + SPF + DMARC) */
+export async function getDNSSecurity(scanId: string): Promise<Record<string, unknown>> {
+  return request<Record<string, unknown>>(`/scan/${scanId}/dns`);
+}
+
 /** Get report data */
 export async function getReportData(scanId: string) {
   return request<Record<string, unknown>>(`/report/${scanId}`);

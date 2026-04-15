@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './HistoryPage.css';
 import GradeBadge from '../components/GradeBadge';
-import { listScans } from '../services/api';
+import { listScans, deleteScan } from '../services/api';
 import type { ScanResponse } from '../types';
 
 export default function HistoryPage() {
@@ -29,6 +29,18 @@ export default function HistoryPage() {
       // silent
     }
     setLoading(false);
+  };
+
+  const handleDelete = async (e: React.MouseEvent, scanId: string) => {
+    e.stopPropagation();
+    if (!confirm('Delete this scan? This cannot be undone.')) return;
+    try {
+      await deleteScan(scanId);
+      setScans(prev => prev.filter(s => s.id !== scanId));
+      setTotal(prev => prev - 1);
+    } catch {
+      alert('Failed to delete scan.');
+    }
   };
 
   useEffect(() => {
@@ -96,18 +108,37 @@ export default function HistoryPage() {
                   <th>Grade</th>
                   <th>Score</th>
                   <th>Status</th>
-                  <th>Action</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {scans.map((scan) => (
-                  <tr key={scan.id} onClick={() => navigate(`/scan?id=${scan.id}`)}>
+                  <tr key={scan.id} onClick={() => navigate(`/scan?id=${scan.id}`)}
+                    style={{ cursor: 'pointer' }}>
                     <td className="cell-domain">{scan.target_url}</td>
                     <td>{scan.created_at ? new Date(scan.created_at).toLocaleDateString() : 'N/A'}</td>
                     <td>{scan.grade ? <GradeBadge grade={scan.grade} size="sm" /> : '—'}</td>
                     <td>{scan.score !== null ? `${scan.score}/100` : '—'}</td>
-                    <td><span className={`badge badge-${scan.status === 'completed' ? 'good' : scan.status === 'failed' ? 'critical' : 'info'}`}>{scan.status}</span></td>
-                    <td><button className="btn btn-ghost" onClick={(e) => { e.stopPropagation(); navigate(`/scan?id=${scan.id}`); }}>View →</button></td>
+                    <td><span className={`badge badge-${scan.status === 'completed' ? 'good' : scan.status === 'failed' ? 'critical' : 'info'}`}>{scan.status.toUpperCase()}</span></td>
+                    <td className="cell-actions">
+                      <button
+                        className="btn btn-ghost btn-action"
+                        title="View full results"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/scan?id=${scan.id}`); }}
+                      >View →</button>
+                      {scan.status === 'completed' && (
+                        <button
+                          className="btn btn-ghost btn-action btn-rescan"
+                          title="Re-scan this domain"
+                          onClick={(e) => { e.stopPropagation(); navigate(`/scan?url=${encodeURIComponent(scan.target_url)}`); }}
+                        >↻ Rescan</button>
+                      )}
+                      <button
+                        className="btn btn-ghost btn-action btn-delete"
+                        title="Delete scan"
+                        onClick={(e) => handleDelete(e, scan.id)}
+                      >🗑</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
