@@ -1,0 +1,39 @@
+.grade-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-circle);
+  font-weight: 800;
+  font-family: var(--font-heading);
+  text-align: center;
+}
+
+.grade-sm { width: 36px; height: 36px; font-size: 16px; }
+.grade-md { width: 56px; height: 56px; font-size: 24px; }
+.grade-lg { width: 96px; height: 96px; font-size: 42px; }
+
+.grade-a-plus, .grade-a {
+  background: linear-gradient(135deg, #00B894 0%, #00D4AA 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4);
+}
+.grade-b {
+  background: linear-gradient(135deg, #00D4AA 0%, #74B9FF 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(0, 212, 170, 0.3);
+}
+.grade-c {
+  background: linear-gradient(135deg, #FDCB6E 0%, #FF9F43 100%);
+  color: var(--primary);
+  box-shadow: 0 4px 15px rgba(253, 203, 110, 0.3);
+}
+.grade-d {
+  background: linear-gradient(135deg, #FF9F43 0%, #FF6B6B 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 159, 67, 0.3);
+}
+.grade-f {
+  background: linear-gradient(135deg, #FF6B6B 0%, #EE5A24 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+}
